@@ -6,6 +6,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=root
+LogsDirectory=zuke
 WorkingDirectory=/opt/zuke/backend
 EnvironmentFile=-/opt/zuke/backend/.env
 Environment=FLASK_ENV=production

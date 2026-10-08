@@ -85,7 +85,7 @@ TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 CURRENT_BACKUP="${BACKUP_DIR}/backup_${TIMESTAMP}"
 mkdir -p "${CURRENT_BACKUP}"
 
-for item in /etc/hostapd/hostapd.conf /etc/default/hostapd /etc/dnsmasq.conf /etc/dnsmasq.d /etc/nftables.conf /etc/nftables.d /etc/sysctl.d/99-zuke-forward.conf /etc/nginx/sites-available /etc/nginx/sites-enabled; do
+for item in /etc/hostapd/hostapd.conf /etc/default/hostapd /etc/dnsmasq.conf /etc/dnsmasq.d /etc/nftables.conf /etc/nftables.d /etc/sysctl.d/99-zuke-forward.conf /etc/nginx/sites-available /etc/nginx/sites-enabled /etc/NetworkManager/conf.d; do
     if [ -e "${item}" ]; then
         cp -a "${item}" "${CURRENT_BACKUP}/"
     fi
@@ -124,9 +124,15 @@ sed \
 
 sed \
     -e "s|__FRONTEND_DIST_DIR__|${ZUKE_ROOT}/frontend/dist|g" \
+    -e "s|__GATEWAY_IP__|${GATEWAY_IP}|g" \
     "${CONFIG_DIR}/nginx-zuke.conf.template" > "${STAGE_DIR}/nginx-zuke.conf"
 
 echo "net.ipv4.ip_forward = 1" > "${STAGE_DIR}/99-zuke-forward.conf"
+
+cat <<EOF > "${STAGE_DIR}/99-zuke-unmanage.conf"
+[keyfile]
+unmanaged-devices=interface-name:${WLAN_IFACE}
+EOF
 echo "  • Files staged in: ${STAGE_DIR} ✓"
 
 echo ""
@@ -144,6 +150,12 @@ if [ "${APPLY_FLAG}" = "--apply" ]; then
     cp "${STAGE_DIR}/hostapd.conf" /etc/hostapd/hostapd.conf
     systemctl unmask hostapd 2>/dev/null || true
     [ -f /etc/default/hostapd ] && sed -i 's|^#\?DAEMON_CONF=.*|DAEMON_CONF="/etc/hostapd/hostapd.conf"|' /etc/default/hostapd
+
+    # Prevent NetworkManager from managing the Wi-Fi AP interface
+    if [ -d /etc/NetworkManager/conf.d ]; then
+        cp "${STAGE_DIR}/99-zuke-unmanage.conf" /etc/NetworkManager/conf.d/99-zuke-unmanage.conf
+        nmcli general reload 2>/dev/null || true
+    fi
 
     ip addr flush dev "${WLAN_IFACE}" || true
     ip addr add "${GATEWAY_IP}/24" dev "${WLAN_IFACE}"

@@ -48,7 +48,10 @@ table inet zuke {
         # Allow authenticated clients on Wi-Fi to route to the internet (WAN)
         iifname "__WLAN_IFACE__" oifname "__WAN_IFACE__" ip saddr @authenticated_ips accept
 
-        # Drop all other forwarding attempts from unauthenticated Wi-Fi clients
+        # Fast-fail unauthenticated TCP forwarding with TCP reset (prompts instant captive portal fallback)
+        iifname "__WLAN_IFACE__" meta l4proto tcp reject with tcp reset
+
+        # Drop all other unauthenticated forwarding attempts (UDP/ICMP)
         iifname "__WLAN_IFACE__" drop
     }
 

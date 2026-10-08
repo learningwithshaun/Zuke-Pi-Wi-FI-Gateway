@@ -50,6 +50,7 @@ rm -f /etc/nftables.d/zuke.nft 2>/dev/null || true
 echo "[3/5] Cleaning up service drop-in files..."
 rm -f /etc/dnsmasq.d/zuke.conf 2>/dev/null || true
 rm -f /etc/hostapd/hostapd.conf 2>/dev/null || true
+rm -f /etc/NetworkManager/conf.d/99-zuke-unmanage.conf 2>/dev/null || true
 rm -f /etc/nginx/sites-enabled/zuke 2>/dev/null || true
 rm -f /etc/nginx/sites-available/zuke 2>/dev/null || true
 rm -f /etc/sysctl.d/99-zuke-forward.conf 2>/dev/null || true
@@ -66,11 +67,15 @@ if [ -n "${TARGET_BACKUP}" ] && [ -d "${TARGET_BACKUP}" ]; then
     [ -d "${TARGET_BACKUP}/nftables.d" ] && cp -a "${TARGET_BACKUP}/nftables.d/"* /etc/nftables.d/ 2>/dev/null || true
     [ -d "${TARGET_BACKUP}/sites-available" ] && cp -a "${TARGET_BACKUP}/sites-available/"* /etc/nginx/sites-available/ 2>/dev/null || true
     [ -d "${TARGET_BACKUP}/sites-enabled" ] && cp -a "${TARGET_BACKUP}/sites-enabled/"* /etc/nginx/sites-enabled/ 2>/dev/null || true
+    [ -d "${TARGET_BACKUP}/conf.d" ] && cp -a "${TARGET_BACKUP}/conf.d/"* /etc/NetworkManager/conf.d/ 2>/dev/null || true
     echo "  • Restored backed up files successfully ✓"
 fi
 
 echo "[5/5] Reloading daemons..."
 systemctl daemon-reload
+if command -v nmcli >/dev/null 2>&1; then
+    nmcli general reload 2>/dev/null || true
+fi
 systemctl restart nginx 2>/dev/null || true
 systemctl restart dnsmasq 2>/dev/null || true
 

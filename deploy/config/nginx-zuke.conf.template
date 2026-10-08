@@ -6,7 +6,7 @@
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
-    server_name portal.zuke.wifi zuke.wifi 192.168.50.1 _;
+    server_name portal.zuke.wifi zuke.wifi __GATEWAY_IP__ _;
 
     root __FRONTEND_DIST_DIR__;
     index index.html;

@@ -24,12 +24,14 @@ domain=zuke.wifi
 local=/zuke.wifi/
 address=/portal.zuke.wifi/__GATEWAY_IP__
 
-# Upstream DNS servers for internet access (used when clients are authorized)
+# Upstream DNS servers (fallback public DNS servers)
 server=1.1.1.1
 server=8.8.8.8
 
+# Query upstream resolvers from /etc/resolv.conf (venue DHCP assigned) in addition to fallbacks
+all-servers=0
+
 # Performance & Logging
 cache-size=1000
-no-resolv
 log-facility=/var/log/dnsmasq-zuke.log
 log-async=25

@@ -92,7 +92,7 @@ class NftablesGatewayService(GatewayService):
             return False
         cmd = [
             "nft", "add", "element", "inet", self.table_name, self.set_name,
-            f"{{ {ip_address} timeout {duration_seconds}s }}"
+            "{", ip_address, "timeout", f"{duration_seconds}s", "}"
         ]
         try:
             subprocess.run(cmd, capture_output=True, text=True, check=True)
@@ -105,7 +105,10 @@ class NftablesGatewayService(GatewayService):
     def revoke_device(self, ip_address: str) -> bool:
         if not ip_address:
             return False
-        cmd = ["nft", "delete", "element", "inet", self.table_name, self.set_name, f"{{ {ip_address} }}"]
+        cmd = [
+            "nft", "delete", "element", "inet", self.table_name, self.set_name,
+            "{", ip_address, "}"
+        ]
         try:
             subprocess.run(cmd, capture_output=True, text=True, check=True)
             logger.info("[NftablesGatewayService] Removed IP %s", ip_address)
@@ -117,7 +120,10 @@ class NftablesGatewayService(GatewayService):
     def is_authorized(self, ip_address: str) -> bool:
         if not ip_address:
             return False
-        cmd = ["nft", "get", "element", "inet", self.table_name, self.set_name, f"{{ {ip_address} }}"]
+        cmd = [
+            "nft", "get", "element", "inet", self.table_name, self.set_name,
+            "{", ip_address, "}"
+        ]
         try:
             res = subprocess.run(cmd, capture_output=True, text=True)
             return res.returncode == 0

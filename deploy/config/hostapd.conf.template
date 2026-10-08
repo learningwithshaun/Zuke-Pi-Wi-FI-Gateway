@@ -11,7 +11,7 @@ channel=__CHANNEL__
 # 802.11n support (High Throughput)
 ieee80211n=1
 wmm_enabled=1
-ht_capab=[HT40+][SHORT-GI-20][SHORT-GI-40]
+ht_capab=[SHORT-GI-20]
 
 # Country code and regulatory compliance
 country_code=__COUNTRY_CODE__
