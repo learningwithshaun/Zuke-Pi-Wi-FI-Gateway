@@ -1,0 +1,73 @@
+#!/usr/sbin/nft -f
+# ==============================================================================
+# Zuke Wi-Fi Gateway - nftables configuration
+# Isolated table: inet zuke
+# ==============================================================================
+
+table inet zuke {
+    # Set of currently authenticated client IP addresses with automatic kernel timeout
+    set authenticated_ips {
+        type ipv4_addr
+        flags timeout
+    }
+
+    # Inbound traffic to the Raspberry Pi itself
+    chain input {
+        type filter hook input priority 0; policy accept;
+
+        # Local loopback
+        iif "lo" accept
+
+        # Connection tracking: accept responses to established connections
+        ct state established,related accept
+        ct state invalid drop
+
+        # CRITICAL SAFETY: Always allow SSH on all interfaces to prevent admin lockout
+        tcp dport 22 accept
+
+        # Allow DHCP queries from clients on the Wi-Fi interface
+        iifname "__WLAN_IFACE__" udp dport 67 accept
+
+        # Allow DNS queries from clients on the Wi-Fi interface
+        iifname "__WLAN_IFACE__" udp dport 53 accept
+        iifname "__WLAN_IFACE__" tcp dport 53 accept
+
+        # Allow HTTP access to the Captive Portal on the Wi-Fi interface
+        iifname "__WLAN_IFACE__" tcp dport 80 accept
+        iifname "__WLAN_IFACE__" tcp dport 5000 accept
+    }
+
+    # Forwarding traffic between customer Wi-Fi and the Internet
+    chain forward {
+        type filter hook forward priority 0; policy drop;
+
+        # Accept established and related connections (replies from internet)
+        ct state established,related accept
+        ct state invalid drop
+
+        # Allow authenticated clients on Wi-Fi to route to the internet (WAN)
+        iifname "__WLAN_IFACE__" oifname "__WAN_IFACE__" ip saddr @authenticated_ips accept
+
+        # Drop all other forwarding attempts from unauthenticated Wi-Fi clients
+        iifname "__WLAN_IFACE__" drop
+    }
+
+    # NAT translation and captive portal redirection
+    chain prerouting {
+        type nat hook prerouting priority -100; policy accept;
+
+        # If client is already authenticated, allow direct internet traffic
+        iifname "__WLAN_IFACE__" ip saddr @authenticated_ips accept
+
+        # If client is NOT authenticated, redirect HTTP (port 80) to the local captive portal (port 80)
+        iifname "__WLAN_IFACE__" tcp dport 80 redirect to :80
+    }
+
+    # Outbound NAT Masquerade to the venue router / internet
+    chain postrouting {
+        type nat hook postrouting priority 100; policy accept;
+
+        # Masquerade traffic exiting to the WAN interface
+        oifname "__WAN_IFACE__" masquerade
+    }
+}

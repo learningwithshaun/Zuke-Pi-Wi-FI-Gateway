@@ -1,0 +1,35 @@
+# ==============================================================================
+# Zuke DHCP & DNS Configuration (dnsmasq)
+# Installed into: /etc/dnsmasq.d/zuke.conf
+# ==============================================================================
+
+# Bind exclusively to the customer Wi-Fi interface
+interface=__WLAN_IFACE__
+bind-interfaces
+except-interface=lo
+
+# DHCP Range and Lease configuration
+dhcp-range=__DHCP_RANGE_START__,__DHCP_RANGE_END__,__NETMASK__,__DHCP_LEASE_TIME__
+
+# Default Gateway (Router) and DNS Server provided to connecting clients
+dhcp-option=option:router,__GATEWAY_IP__
+dhcp-option=option:dns-server,__GATEWAY_IP__
+
+# RFC 8908 / RFC 8910 Captive Portal Identification (Option 114)
+# Allows modern iOS and Android to natively display the portal prompt
+dhcp-option=114,__PORTAL_URL__
+
+# Local Domain Resolution
+domain=zuke.wifi
+local=/zuke.wifi/
+address=/portal.zuke.wifi/__GATEWAY_IP__
+
+# Upstream DNS servers for internet access (used when clients are authorized)
+server=1.1.1.1
+server=8.8.8.8
+
+# Performance & Logging
+cache-size=1000
+no-resolv
+log-facility=/var/log/dnsmasq-zuke.log
+log-async=25

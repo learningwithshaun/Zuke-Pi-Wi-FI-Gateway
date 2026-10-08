@@ -1,0 +1,13 @@
+[Unit]
+Description=Zuke Wi-Fi Gateway - nftables Isolation Rules
+After=network.target nftables.service
+Before=zuke-backend.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/nft -f /etc/nftables.d/zuke.nft
+ExecStop=/usr/sbin/nft delete table inet zuke
+
+[Install]
+WantedBy=multi-user.target

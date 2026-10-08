@@ -1,0 +1,26 @@
+# ==============================================================================
+# Zuke Wi-Fi Access Point Configuration (hostapd)
+# ==============================================================================
+
+interface=__WLAN_IFACE__
+driver=nl80211
+ssid=__SSID__
+hw_mode=g
+channel=__CHANNEL__
+
+# 802.11n support (High Throughput)
+ieee80211n=1
+wmm_enabled=1
+ht_capab=[HT40+][SHORT-GI-20][SHORT-GI-40]
+
+# Country code and regulatory compliance
+country_code=__COUNTRY_CODE__
+ieee80211d=1
+
+# Open network (no encryption) - Captive portal handles authorization
+auth_algs=1
+wpa=0
+
+# Operational options
+ignore_broadcast_ssid=0
+max_num_sta=100

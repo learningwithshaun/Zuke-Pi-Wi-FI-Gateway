@@ -1,0 +1,76 @@
+# ==============================================================================
+# Zuke Wi-Fi Captive Portal - Nginx Virtual Host
+# Installed into: /etc/nginx/sites-available/zuke
+# ==============================================================================
+
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name portal.zuke.wifi zuke.wifi 192.168.50.1 _;
+
+    root __FRONTEND_DIST_DIR__;
+    index index.html;
+
+    # Captive Portal Detection Probes forwarded to Python Backend
+    location /generate_204 {
+        proxy_pass http://127.0.0.1:5000/generate_204;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    location /gen_204 {
+        proxy_pass http://127.0.0.1:5000/gen_204;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    location /hotspot-detect.html {
+        proxy_pass http://127.0.0.1:5000/hotspot-detect.html;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    location /canonical.html {
+        proxy_pass http://127.0.0.1:5000/canonical.html;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    location /ncsi.txt {
+        proxy_pass http://127.0.0.1:5000/ncsi.txt;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    location /connecttest.txt {
+        proxy_pass http://127.0.0.1:5000/connecttest.txt;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    # API endpoints forwarded to Python / Flask Backend
+    location /api/ {
+        proxy_pass http://127.0.0.1:5000/api/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # React Single Page Application Frontend
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Performance
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        expires 30d;
+        add_header Cache-Control "public, no-transform";
+    }
+}
